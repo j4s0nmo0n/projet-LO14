@@ -57,7 +57,7 @@ archive="$(curl -s $1:$2/$3 | sed -n $begin,$((end-1))p)"
 nombre_de_dossiers="$(curl -s $1:$2/$3 | sed -n "$begin,$((end-1))p" | grep -o '@' | wc -l)"
 
 #On crée les dossiers recursivement 
-mkdir -p $(curl -s $1:$2/3 | head -$begin | tail -1  | cut -d ' ' -f 2)
+mkdir -p $(curl -s $1:$2/$3 | head -$begin | tail -1  | cut -d ' ' -f 2)
 
  #Ici on fait une boucle dans laquelle on prend tout ce qui se trouve entre le directory $repertoire et le @ puis on le met dans un fichier appelé temporaire 
 for ((i=0;i<$nombre_de_dossiers;i++ )); do
@@ -79,7 +79,6 @@ rm temporaire temporaire1
 
 done
 }
-
 
 
 if [ "$1" = "-list" ];then
@@ -132,9 +131,20 @@ base="$(echo $base | cut -d '/' -f 1-$position)/"
 #Nous affichons $base
 mon_invite="vsh:$base>"
 fi
-
 	
+elif [ "$arg1" = "../.." ];then
+		if [ "$base" != "$base_orig" ]; then
+#Nous comptons le nombre de / c'est à dire le nombre de repertoire de notre base
+compter_nombre_de_slash="$(echo $base | grep -o '/' | wc -l )"
 
+#cette variable permet de retourner le nombre de /-1 donc le dossier courant-1 donc le dossier parent
+position="$(( compter_nombre_de_slash - 2))"
+
+#Nous affectons une nouvelle valeur à $base
+base="$(echo $base | cut -d '/' -f 1-$position)/"
+#Nous affichons $base
+mon_invite="vsh:$base>"
+fi
 elif [ "$(cat archive.arch | grep 'directory '$base$arg1)" != "" ];then 
 	base="$base$arg1/"
 	mon_invite="vsh:$base>"
@@ -145,6 +155,9 @@ fi
 if [ "$cmd" = "pwd" ];then
 
 	echo $base
+	if [ $base == $base_orig ];then
+		echo "/"
+	fi
 fi
 if [ "$cmd" = "ls" ];then
 
